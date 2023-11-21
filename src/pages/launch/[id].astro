@@ -1,0 +1,21 @@
+---
+import { getLaunchBy } from '../../services/spacex'
+import Layout from "../../layouts/Layout.astro";
+const { id } = Astro.params
+
+export const prerender = false
+
+let launch
+if (id) {
+  launch = await getLaunchBy({ id });
+}
+---
+
+<Layout title={`Launch ${launch?.name}`}>
+  <article class="flex gap-y-4 flex-col">
+    <img class="w-52 h-auto" src={launch?.links.patch.small} alt={launch?.name}>
+    <h2 class="text-4xl text-white font-bold">Launch #{launch?.flight_number}</h2>
+    <p class="text-lg"><strong>Details: </strong>{launch?.details}</p>
+    <a href={`${launch?.links.webcast}`} target="_blank">YouTube Video</a>
+  </article>
+</Layout>
