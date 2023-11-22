@@ -5,17 +5,47 @@ const { id } = Astro.params
 
 export const prerender = false
 
-let launch
-if (id) {
-  launch = await getLaunchBy({ id });
+let launch = id ? await getLaunchBy({ id }) : null;
+let date = "Unknown...";
+
+function formatDate(inputDate: Date) {
+  const date = new Date(inputDate);
+  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric'};
+  const formattedDate = new Intl.DateTimeFormat('en-US', options).format(date);
+
+  return formattedDate;
 }
+
+if (launch?.date_local) date = formatDate(launch?.date_local);
+const launchStatus = launch?.success ? "Success" : "Failure";
+
+console.log(launch)
 ---
 
 <Layout title={`Launch ${launch?.name}`}>
   <article class="flex gap-y-4 flex-col">
-    <img class="w-52 h-auto" src={launch?.links.patch.small} alt={launch?.name}>
-    <h2 class="text-4xl text-white font-bold">Launch #{launch?.flight_number}</h2>
-    <p class="text-lg"><strong>Details: </strong>{launch?.details}</p>
-    <a href={`${launch?.links.webcast}`} target="_blank">YouTube Video</a>
+    <img class="w-52 h-auto" src={launch?.links.patch.small ? launch.links.patch.small : "/notImage.svg" } alt={launch?.name}>
+    <h2 class="text-4xl text-white font-bold items-center flex">
+      Launch #{launch?.flight_number} 
+      {
+        <span class:list={[
+          "justify-center items-center text-xs font-semibold m-4 px-2.5 py-0.5 rounded",
+          {
+            "text-green-200 bg-green-900": launch?.success,
+            "text-red-200 bg-red-900": !launch?.success 
+          }]} 
+        >
+          {launchStatus}
+        </span>
+      }
+    </h2>
+    <p class="text-lg"><strong>Name: </strong>{launch?.name ? launch.name : "Unknown..."}</p>
+    <p class="text-lg"><strong>Date: </strong>{launch?.date_local ? date : "Unknown..."}</p>
+    <p class="text-lg"><strong>Details: </strong>{launch?.details ? launch.details : "No details..."}</p>
+    {launch?.links.webcast ? 
+      <div class="relative rounded-lg border shadow-md bg-gray-800 border-gray-700 flex flex-col" style="padding-top: 56.25%">
+        <iframe class="absolute inset-0 w-full h-full p-4" src={`https://www.youtube-nocookie.com/embed/${launch.links.youtube_id}`}></iframe>
+      </div>
+     : ""}
   </article>
 </Layout>
